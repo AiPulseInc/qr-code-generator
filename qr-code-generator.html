@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator kodów QR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .qr-output {
+            margin-top: 30px;
+            text-align: center;
+        }
+        #qrcode {
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+        .options-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .option-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .download-btn {
+            background-color: #34a853;
+            margin-top: 20px;
+        }
+        .download-btn:hover {
+            background-color: #2d8e47;
+        }
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generator kodów QR</h1>
+        
+        <div class="input-section">
+            <label for="text-input">Dane do kodowania:</label>
+            <textarea id="text-input" placeholder="Wprowadź tekst, URL, dane kontaktowe lub inne informacje..."></textarea>
+        </div>
+        
+        <div class="options-section">
+            <div class="option-group">
+                <label for="error-correction">Poziom korekcji błędów:</label>
+                <select id="error-correction">
+                    <option value="L">Niski (7%)</option>
+                    <option value="M" selected>Średni (15%)</option>
+                    <option value="Q">Wysoki (25%)</option>
+                    <option value="H">Bardzo wysoki (30%)</option>
+                </select>
+            </div>
+            
+            <div class="option-group">
+                <label for="qr-size">Rozmiar kodu QR:</label>
+                <select id="qr-size">
+                    <option value="128">Mały (128x128)</option>
+                    <option value="200" selected>Średni (200x200)</option>
+                    <option value="300">Duży (300x300)</option>
+                    <option value="400">Bardzo duży (400x400)</option>
+                </select>
+            </div>
+        </div>
+        
+        <button id="generate-btn">Generuj kod QR</button>
+        
+        <div class="qr-output">
+            <div id="qrcode"></div>
+            <div id="error-message" class="error"></div>
+            <button id="download-btn" class="download-btn" style="display: none;">Pobierz jako PNG</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('text-input');
+            const errorCorrection = document.getElementById('error-correction');
+            const qrSize = document.getElementById('qr-size');
+            const generateBtn = document.getElementById('generate-btn');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const errorMessage = document.getElementById('error-message');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            let qrcode = null;
+            
+            generateBtn.addEventListener('click', function() {
+                generateQRCode();
+            });
+            
+            function generateQRCode() {
+                const text = textInput.value.trim();
+                const size = parseInt(qrSize.value);
+                const correction = errorCorrection.value;
+                
+                // Walidacja
+                if (!text) {
+                    errorMessage.textContent = "Proszę wprowadzić dane do kodowania";
+                    downloadBtn.style.display = 'none';
+                    qrcodeDiv.innerHTML = '';
+                    return;
+                }
+                
+                errorMessage.textContent = "";
+                qrcodeDiv.innerHTML = '';
+                
+                try {
+                    qrcode = new QRCode(qrcodeDiv, {
+                        text: text,
+                        width: size,
+                        height: size,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel[correction]
+                    });
+                    
+                    downloadBtn.style.display = 'inline-block';
+                } catch (error) {
+                    errorMessage.textContent = "Wystąpił błąd podczas generowania kodu QR. Sprawdź dane wejściowe.";
+                    downloadBtn.style.display = 'none';
+                }
+            }
+            
+            downloadBtn.addEventListener('click', function() {
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (canvas) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = 'kod-qr.png';
+                    link.href = dataUrl;
+                    link.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
